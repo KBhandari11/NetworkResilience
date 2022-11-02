@@ -25,7 +25,7 @@ from torch.nn import Flatten, Linear
 from torch_geometric.utils import convert
 from utils.reinforcement_learning.replay_buffer import ReplayBuffer
 from open_spiel.python import rl_agent
-from utils.reinforcement_learning.GraphNN import GraphNN
+from utils.reinforcement_learning.CIGraphNN import CIGraphNN
 
 
 Transition = collections.namedtuple(
@@ -61,7 +61,7 @@ class DQN(rl_agent.AbstractAgent):
                epsilon_decay_duration=int(1e6),
                optimizer_str="adam",
                loss_str="huber",
-               GraphNN = GraphNN):
+               GraphNN = CIGraphNN):
     """Initialize the DQN agent."""
 
     # This call to locals() is used to store every argument used to initialize
