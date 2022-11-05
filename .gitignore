@@ -1,1 +1,9 @@
 wandb/
+#ignore Notebook Checkpoints
+.ipynb_checkpoints/
+#largefile Model
+#model/
+ipython
+#wandb
+wandb/
+__pycache__
