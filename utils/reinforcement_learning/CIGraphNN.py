@@ -65,6 +65,7 @@ class CIGraphNN(nn.Module):
     """
     super(CIGraphNN, self).__init__()
     hidden_conv,hidden_final = hidden_sizes[0], hidden_sizes[1]
+    self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     
     #2 GAT layer
     self.conv1 = CIConv(feature_size, hidden_conv[0]) 
@@ -79,7 +80,7 @@ class CIGraphNN(nn.Module):
     self.linear3 = nn.Linear(hidden_final[1], 1)
   
   def forward(self, node_feature, edge_index, global_x):
-    x, edge_index = node_feature, edge_index
+    x, edge_index= node_feature.to(self.device), edge_index.to(self.device)
     
     #GAT Layer for Graphs
     x = F.relu(self.conv1(x, edge_index))

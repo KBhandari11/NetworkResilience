@@ -82,7 +82,7 @@ class GraphState(pyspiel.State):
     all_nodes = np.array(list(self.Graph.nodes(data="active")))[:,1]
     active_nodes = np.where(all_nodes == 1)[0]
     if player == 0 :
-        action_sequence = np.squeeze(np.append(active_nodes,np.where(all_nodes == 3)))
+        action_sequence = active_nodes#np.squeeze(np.append(active_nodes,np.where(all_nodes == 3)))
     elif player == 1:
         action_sequence = active_nodes 
     else:
@@ -110,6 +110,7 @@ class GraphState(pyspiel.State):
     beta = molloy_reed(self.Graph)
     if beta == 0:
       beta = self.beta[-1]
+      cond = True
     reward_1 = (self.lcc[-1] - l)/self.lcc[-1]
     reward_2 = (self.beta[-1] - beta)/self.beta[-1]
     self._rewards[0] = ((self.num_nodes-len(self.lcc))/self.num_nodes)* (self.alpha * reward_1 +(1-self.alpha)*reward_2)

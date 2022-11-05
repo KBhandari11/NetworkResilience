@@ -9,23 +9,19 @@ from sklearn.preprocessing import StandardScaler
 def gen_graph(cur_n, g_type,seed=None):
     random.seed(seed)
     if g_type == 'erdos_renyi':
-        g = nx.erdos_renyi_graph(n=cur_n, p=random.uniform(0.15,0.20),seed = seed)
+        g = nx.erdos_renyi_graph(n=cur_n, p=random.uniform(0.10,0.15),seed = seed)
     elif g_type == 'powerlaw':
-        g = nx.powerlaw_cluster_graph(n=cur_n, m=random.randint(2,4), p=random.uniform(0.1,0.5),seed = seed)
+        g = nx.powerlaw_cluster_graph(n=cur_n, m=random.randint(2,4), p=random.uniform(0.01,0.05),seed = seed)
     elif g_type == 'small-world':
         g = nx.newman_watts_strogatz_graph(n=cur_n, k=random.randint(2,5), p=random.uniform(0.1,0.2),seed = seed)
     elif g_type == 'barabasi_albert':
-        g = nx.barabasi_albert_graph(n=cur_n, m=random.randint(2,5),seed = seed)
+        #g = nx.barabasi_albert_graph(n=cur_n, m=random.randint(2,5),seed = seed)
+        g = nx.barabasi_albert_graph(n=cur_n, m=random.randint(1,3),seed = seed)
     elif g_type == 'geometric':
         g = nx.random_geometric_graph(cur_n, random.uniform(0.1,0.4),seed = seed)
     return g
 
-def add_super_node(graph):
-    x = len(graph)
-    ebunch = [(i,x) for i in range(x)]
-    graph.add_node(x)
-    graph.add_edges_from(ebunch)
-    return graph
+
     
 def gen_new_graphs(graph_type,seed = None):
     random.seed(seed)
@@ -65,10 +61,9 @@ def molloy_reed(g):
   return beta
 
 def global_feature(g): 
-    subGraph = g#g.subgraph(np.arange(len(g)-1)) #for supernode
-    M = len(subGraph.edges())
-    N = len(subGraph)
-    degs =   np.array(subGraph.degree())[:,1]
+    M = len(g.edges())
+    N = len(g)
+    degs =   np.array(g.degree())[:,1]
     k1 = degs.mean()
     k2 = np.mean(degs** 2)
     div = k2 - k1**2
@@ -79,14 +74,14 @@ def global_feature(g):
         sorted_degs = sorted(degs)
         gini = sum([(i+1) * sorted_degs[i] for i in range(N)])/(M*N) - (N+1)/N
         entrop = entropy(degs/M)/N
-        transitivity = nx.algorithms.cluster.transitivity(subGraph)
+        transitivity = nx.algorithms.cluster.transitivity(g)
     else:
         heterogeneity = 0
         density = (2*M)/(N*(N-1))
         resilience = 0
         gini = 0
         entrop = 0
-        transitivity = nx.algorithms.cluster.transitivity(subGraph)
+        transitivity = nx.algorithms.cluster.transitivity(g)
     global_properties = np.hstack((density,resilience,heterogeneity,gini,entrop,transitivity))
     #global_properties = np.hstack((density,resilience,heterogeneity))
     global_properties = torch.from_numpy(global_properties.astype(np.float32))#.to(device)
@@ -105,7 +100,10 @@ def get_centrality_features(g):
     degree_centrality = list(nx.degree_centrality(g).values())
     #precolation_centrality = list(nx.percolation_centrality(g,attribute='active').values())
     #closeness_centrality = list(nx.closeness_centrality(g).values())
-    eigen_centrality = list(nx.eigenvector_centrality(g,tol=1e-03).values())
+    try: 
+        eigen_centrality = list(nx.eigenvector_centrality(g,tol=1e-03).values())
+    except:
+        eigen_centrality = list(nx.eigenvector_centrality(g,tol=1e-02).values())
     clustering_coeff = list(nx.clustering(g).values())
     core_num = list(nx.core_number(g).values())
     pagerank = list(nx.pagerank(g).values())
@@ -117,7 +115,7 @@ def get_centrality_features(g):
     return x
 
 def features(g): 
-    #actualGraph = g.subgraph(np.arange(len(g)-1)) #for actual graph
+    #actualGraph = g.g(np.arange(len(g)-1)) #for actual graph
     #x = get_centrality_features(actualGraph) #with supernode
     x = get_centrality_features(g)
     #x[:-1,:] =x_actual
