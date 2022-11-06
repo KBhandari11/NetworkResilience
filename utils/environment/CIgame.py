@@ -108,9 +108,9 @@ class GraphState(pyspiel.State):
     ebunch = self.Graph.incident(attack_node)
     self.Graph.delete_edges(ebunch)
     cond, l = network_dismantle(self.Graph, self.lcc[0])
-    #edge_index, edge_attr = utils.from_scipy_sparse_matrix(self.Graph.get_adjacency_sparse())
-    self.info_state = utils.from_networkx(self.Graph.to_networkx())
-    #self.info_state = Data(edge_index=edge_index, edge_attr=edge_attr)
+    edge_index, edge_attr = utils.from_scipy_sparse_matrix(self.Graph.get_adjacency_sparse())
+    #self.info_state = utils.from_networkx(self.Graph.to_networkx())
+    self.info_state = Data(edge_index=edge_index, edge_attr=edge_attr)
     self.info_state.x = reduceddegree(self.Graph)
     self.global_feature = None
     beta = molloy_reed(self.Graph)
