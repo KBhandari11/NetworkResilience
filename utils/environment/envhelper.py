@@ -4,6 +4,7 @@ import torch
 import networkx as nx
 from scipy.stats import entropy
 from igraph import Graph
+from torch_geometric.data import Data
 
 def gen_graph(cur_n, g_type,seed=None):
     random.seed(seed)
@@ -82,8 +83,8 @@ def global_feature(g):
         heterogeneity = div/k1
         density = (2*M)/(N*(N-1))
         resilience = k2/k1
-        sorted_degs = sorted(degs)
-        gini = sum([(i+1) * sorted_degs[i] for i in range(N)])/(M*N) - (N+1)/N
+        degs.sort()
+        gini = np.sum(degs * (degs + 1))/(M*N) - (N+1)/N
         entrop = entropy(degs/M)/N
         transitivity = subGraph.transitivity_undirected()
     else:
@@ -148,3 +149,18 @@ def network_dismantle(board, init_lcc):
 def board_to_string(board):
     """Returns a string representation of the board."""
     return " ".join(str(f) for _, f in board.vs["active"])
+
+def from_igraph(graph):
+    edges = [edge.tuple for edge in graph.es]
+
+    edge_index = torch.tensor(edges, dtype=torch.long).t().contiguous()
+
+    data = {}
+
+    data["active"] = torch.tensor(graph.vs["active"])
+    data['edge_index'] = edge_index.view(2, -1)
+    data = Data.from_dict(data)
+
+    data.x = data["active"].view(-1, 1)
+
+    return data

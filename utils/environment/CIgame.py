@@ -22,7 +22,6 @@ chance and imperfect information.
 
 import numpy as np
 from torch_geometric import utils
-from torch_geometric.data import Data
 from  utils.environment.envhelper import *
 import pyspiel
 
@@ -60,16 +59,15 @@ class GraphState(pyspiel.State):
     self._is_terminal = False
     self.Graph = Graph
     self.num_nodes = self.Graph.vcount()
-    self.info_state = utils.from_networkx(self.Graph.to_networkx())
-    #edge_index, edge_attr = utils.from_scipy_sparse_matrix(self.Graph.get_adjacency_sparse())
-    #self.info_state = Data(x=self.Graph.vs["active"], edge_index=edge_index, num_nodes=self.Graph.vcount())
+    #self.info_state = utils.from_networkx(self.Graph.to_networkx())
+    self.info_state = from_igraph(self.Graph)
     self.info_state.x = reduceddegree(self.Graph)
     self.global_feature = None
     self._rewards = np.zeros(_NUM_PLAYERS)
     self._returns = np.zeros(_NUM_PLAYERS)
     self.lcc = [get_lcc(self.Graph)]
     self.r = []
-    self.alpha = 1 - self.Graph.subgraph(np.arange(self.Graph.vcount()-1)).density()
+    self.alpha = 1 - self.Graph.subgraph(range(self.Graph.vcount()-1)).density()
     self.beta = [molloy_reed(self.Graph)]
     self.empty_index = torch.Tensor().reshape((2, 0))
 
@@ -108,9 +106,8 @@ class GraphState(pyspiel.State):
     ebunch = self.Graph.incident(attack_node)
     self.Graph.delete_edges(ebunch)
     cond, l = network_dismantle(self.Graph, self.lcc[0])
-    self.info_state = utils.from_networkx(self.Graph.to_networkx())
-    #edge_index, edge_attr = utils.from_scipy_sparse_matrix(self.Graph.get_adjacency_sparse())
-    #self.info_state = Data(x=self.Graph.vs["active"], edge_index=edge_index, num_nodes=self.Graph.vcount())
+    #self.info_state = utils.from_networkx(self.Graph.to_networkx())
+    self.info_state = from_igraph(self.Graph)
     self.info_state.x = reduceddegree(self.Graph)
     self.global_feature = None
     beta = molloy_reed(self.Graph)
@@ -147,9 +144,8 @@ class GraphState(pyspiel.State):
 
   def new_initial_state(self,Graph):
       self.Graph = Graph
-      self.info_state = utils.from_networkx(self.Graph.to_networkx())
-      #edge_index, edge_attr = utils.from_scipy_sparse_matrix(self.Graph.get_adjacency_sparse())
-      #self.info_state = Data(x=self.Graph.vs["active"], edge_index=edge_index, num_nodes=self.Graph.vcount())
+      #self.info_state = utils.from_networkx(self.Graph.to_networkx())
+      self.info_state = from_igraph(self.Graph)
       self.info_state.x = reduceddegree(self.Graph)
       self.global_feature = None
       self.lcc = [get_lcc(self.Graph)]
