@@ -21,9 +21,8 @@ chance and imperfect information.
 
 
 import numpy as np
-import networkx as nx
 from torch_geometric import utils
-from  utils.environment.envhelper import*
+from  utils.environment.envhelper import *
 import pyspiel
 
 
@@ -59,16 +58,18 @@ class GraphState(pyspiel.State):
     super().__init__(game)
     self._is_terminal = False
     self.Graph = Graph
-    self.num_nodes = len(self.Graph)
-    self.info_state = utils.from_networkx(self.Graph)
+    self.num_nodes = self.Graph.vcount()
+    #self.info_state = utils.from_networkx(self.Graph.to_networkx())
+    self.info_state = from_igraph(self.Graph)
     self.info_state.x = reduceddegree(self.Graph)
     self.global_feature = None
     self._rewards = np.zeros(_NUM_PLAYERS)
     self._returns = np.zeros(_NUM_PLAYERS)
     self.lcc = [get_lcc(self.Graph)]
     self.r = []
-    self.alpha = (1-nx.density(self.Graph.subgraph(np.arange(len(self.Graph)-1))))
+    self.alpha = 1 - self.Graph.subgraph(range(self.Graph.vcount()-1)).density()
     self.beta = [molloy_reed(self.Graph)]
+    self.empty_index = torch.Tensor().reshape((2, 0))
 
   # OpenSpiel (PySpiel) API functions are below. This is the standard set that should be implemented by every perfect-information sequential-move game.
 
@@ -79,7 +80,7 @@ class GraphState(pyspiel.State):
   
   def _legal_actions(self, player):
     """Returns a list of legal actions, sorted in ascending order."""
-    all_nodes = np.array(list(self.Graph.nodes(data="active")))[:,1]
+    all_nodes = np.array(self.Graph.vs["active"])
     active_nodes = np.where(all_nodes == 1)[0]
     if player == 0 :
         action_sequence = active_nodes#np.squeeze(np.append(active_nodes,np.where(all_nodes == 3)))
@@ -97,14 +98,16 @@ class GraphState(pyspiel.State):
     #defend_node = self.board.nodes[actions[1]]["index"]
     defend_node = actions[1]
     if (actions[0] == actions[1]):
-        self.Graph.nodes[attack_node]["active"] = 0
+      self.Graph.vs[attack_node]["active"] = 0
     else: 
-        self.Graph.nodes[attack_node]["active"] = 0
-        self.Graph.nodes[defend_node]["active"] = 2
-    ebunch = list(self.Graph.edges(attack_node))
-    self.Graph.remove_edges_from(ebunch)
+      self.Graph.vs[attack_node]["active"] = 0
+      self.Graph.vs[defend_node]["active"] = 2
+    #self.Graph.delete_vertices(attack_node)
+    ebunch = self.Graph.incident(attack_node)
+    self.Graph.delete_edges(ebunch)
     cond, l = network_dismantle(self.Graph, self.lcc[0])
-    self.info_state = utils.from_networkx(self.Graph)
+    #self.info_state = utils.from_networkx(self.Graph.to_networkx())
+    self.info_state = from_igraph(self.Graph)
     self.info_state.x = reduceddegree(self.Graph)
     self.global_feature = None
     beta = molloy_reed(self.Graph)
@@ -142,13 +145,14 @@ class GraphState(pyspiel.State):
 
   def new_initial_state(self,Graph):
       self.Graph = Graph
-      self.info_state = utils.from_networkx(self.Graph)
+      #self.info_state = utils.from_networkx(self.Graph.to_networkx())
+      self.info_state = from_igraph(self.Graph)
       self.info_state.x = reduceddegree(self.Graph)
       self.global_feature = None
       self.lcc = [get_lcc(self.Graph)]
       self.r = []
       #self.alpha = (1-nx.density(self.Graph.subgraph(np.arange(len(self.Graph)-1)))) # For Supernode
-      self.alpha = (1-nx.density(self.Graph))
+      self.alpha = 1-self.Graph.density()
       self.beta = [molloy_reed(self.Graph)]
 
 
@@ -172,8 +176,8 @@ class BoardObserver:
     # convenient than with the 1-D tensor. Both are views onto the same memory.
     obs = self.dict["observation"]
     obs = np.zeros((state.num_nodes))
-    all_nodes = np.array(list(state.Graph.nodes(data="active")))
-    self.tensor =all_nodes
+    all_nodes = np.array([(i, state.Graph.vs[i]["active"]) for i in state.Graph.vs.indices])
+    self.tensor = all_nodes
     return self.tensor
 
   def string_from(self, state, player):
