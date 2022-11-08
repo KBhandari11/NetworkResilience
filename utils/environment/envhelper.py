@@ -22,12 +22,14 @@ def gen_graph(cur_n, g_type,seed=None):
     elif g_type == 'geometric':
         #g = nx.random_geometric_graph(cur_n, random.uniform(0.1,0.4),seed = seed)
         g = Graph.GSG(n=cur_n, radius=random.uniform(0.1,0.4))
+    
+    g.vs['name'] = range(cur_n)
     return g
 
 def add_super_node(graph):
     x = graph.vcount()
     ebunch = [(i, x) for i in range(x)]
-    graph.add_vertices(x)
+    graph.add_vertex(x)
     graph.add_edges(ebunch)
     return graph
     
