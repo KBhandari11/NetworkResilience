@@ -3,7 +3,7 @@
     "dataset": "Synthetic Dataset:barabasi_albert ",
     "centrality_feature_name":"Deg,Eigen,CC,K-Core,PgRnk,CI ",
     "global_feature_name":"Hetero,Dens,Res,Gini,Entro,Transi",
-    "centrality_features": 1,
+    "centrality_features": 7,
     "global_features": 0,
     "save_every": 500,
     "num_train_episodes":5e5,

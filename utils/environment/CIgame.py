@@ -61,7 +61,6 @@ class GraphState(pyspiel.State):
     self.num_nodes = self.Graph.vcount()
     #self.info_state = utils.from_networkx(self.Graph.to_networkx())
     self.info_state = from_igraph(self.Graph)
-    self.info_state.x = reduceddegree(self.Graph)
     self.global_feature = None
     self._rewards = np.zeros(_NUM_PLAYERS)
     self._returns = np.zeros(_NUM_PLAYERS)
@@ -108,7 +107,6 @@ class GraphState(pyspiel.State):
     cond, l = network_dismantle(self.Graph, self.lcc[0])
     #self.info_state = utils.from_networkx(self.Graph.to_networkx())
     self.info_state = from_igraph(self.Graph)
-    self.info_state.x = reduceddegree(self.Graph)
     self.global_feature = None
     beta = molloy_reed(self.Graph)
     if beta == 0:
@@ -147,7 +145,6 @@ class GraphState(pyspiel.State):
       self.Graph = Graph
       #self.info_state = utils.from_networkx(self.Graph.to_networkx())
       self.info_state = from_igraph(self.Graph)
-      self.info_state.x = reduceddegree(self.Graph)
       self.global_feature = None
       self.lcc = [get_lcc(self.Graph)]
       self.r = []

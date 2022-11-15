@@ -93,7 +93,7 @@ def get_ci(g, l):
     ci = []
     degs = np.array(g.degree())
     for i in g.vs.indices:
-        n = np.array([path[-1] for path in g.get_shortest_paths(i) if path and len(path) <= l])
+        n = np.array([path[-1] for path in g.get_all_shortest_paths(i) if path and len(path) <= l])
         j = np.sum(degs[n] - 1)
         ci.append((g.degree(i) - 1) * j)
     return ci
@@ -118,11 +118,13 @@ def features(g):
     #x = get_centrality_features(actualGraph) #with supernode
     x = get_centrality_features(g)
     #x[:-1,:] =x_actual
-    x_normed = (x - np.mean(x)) / np.std(x) #Standardize features
+    #x_normed = (x - np.mean(x)) / np.std(x) #Standardize features
     #active_nodes =  np.where(np.array(list(g.nodes(data="active")))[:,1] == 0)[0]
     #x_normed[active_nodes,:]=np.zeros(np.shape(x_normed)[1])
-    x = torch.from_numpy(x_normed.astype(np.float32))#.to(device)
-    return x
+    x = torch.from_numpy(x.astype(np.float32))#.to(device)
+    x_normed = (x - torch.mean(x)) / torch.std(x)
+
+    return x_normed
 
 def reduceddegree(g): 
     x = torch.FloatTensor(g.degree()).reshape((-1, 1)) - 1
@@ -146,11 +148,19 @@ def from_igraph(graph):
     edge_index = torch.tensor(edges, dtype=torch.long).t().contiguous()
 
     data = {}
+    data["features"] = features(graph)
+    data["reduceddegree"] = reduceddegree(graph)
 
-    data["active"] = torch.tensor(graph.vs["active"])
-    data['edge_index'] = edge_index.view(2, -1)
+    data["edge_index"] = edge_index.view(2, -1)
     data = Data.from_dict(data)
 
-    data.x = data["active"].view(-1, 1)
+    xs = []
+    for key in ("features", "reduceddegree"):
+        x = data[key]
+        x = x.view(-1, 1) if x.dim() <= 1 else x
+        xs.append(x)
+        del data[key]
+
+    data.x = torch.cat(xs, dim=-1)
 
     return data
