@@ -20,7 +20,6 @@ def gen_graph(cur_n, g_type,seed=None):
         g = Graph.Barabasi(n=cur_n, m=random.randint(1,3))
     elif g_type == 'geometric':
         g = Graph.GSG(n=cur_n, radius=random.uniform(0.1,0.4))
-    
     g.vs['name'] = range(cur_n)
     return g
 
@@ -43,16 +42,17 @@ def reset(graph):
     return graph   
 
 # Helper functions for game details.
+'''def get_lcc(g):
+    return len(max(g.connected_components(), key=len)) '''    
 def get_lcc(g):
-    return len(max(g.connected_components(), key=len))
-    '''subGraph = g.subgraph(np.arange(len(g)-1))
-    return len(max(nx.connected_components(subGraph), key=len))#for supernode'''
+    G = g.to_networkx()
+    return len(max(nx.connected_components(G), key=len))
 
 def molloy_reed(g):
-  all_degree = np.array(g.degree())
+  degs = np.array(g.degree())
   #degs = all_degree
-  nonmax_lcc = list(set(g.vs.indices).difference(set(max(g.connected_components(), key=len))))
-  degs = np.delete(all_degree, np.array(nonmax_lcc, dtype=int))#for non max LCC
+  #nonmax_lcc = list(set(g.vs.indices).difference(set(max(g.connected_components(), key=len))))
+  #degs = np.delete(all_degree, np.array(nonmax_lcc, dtype=int))#for non max LCC
   #degs = np.delete(deg,-1)#for supernode
   k = degs.mean()
   k2 = np.mean(degs** 2)
@@ -103,13 +103,12 @@ def get_centrality_features(g):
     #precolation_centrality = list(nx.percolation_centrality(g,attribute='active').values())
     #closeness_centrality = list(nx.closeness_centrality(g).values())
     eigen_centrality = np.array(g.eigenvector_centrality())
-    clustering_coeff = np.array(g.transitivity_local_undirected())
-    core_num = np.array(g.coreness())
-    pagerank = np.array(g.pagerank())
+    #clustering_coeff = np.array(g.transitivity_local_undirected())
+    #core_num = np.array(g.coreness())
+    pagerank = np.array(g.personalized_pagerank())
     ci = get_ci(g, 3)
     #active = np.array(g.nodes.data("active"))[:,1]
-    #x = np.column_stack((925egree_centrality,clustering_coeff,pagerank, core_num ))
-    x = np.column_stack((degree_centrality,eigen_centrality,pagerank,clustering_coeff, core_num, ci ))
+    x = np.column_stack((degree_centrality,eigen_centrality,pagerank, ci ))
     #x = np.column_stack((degree_centrality,eigen_centrality,pagerank))
     return x
 
@@ -148,19 +147,19 @@ def from_igraph(graph):
     edge_index = torch.tensor(edges, dtype=torch.long).t().contiguous()
 
     data = {}
-    data["features"] = features(graph)
+    #data["features"] = features(graph)
     data["reduceddegree"] = reduceddegree(graph)
 
     data["edge_index"] = edge_index.view(2, -1)
     data = Data.from_dict(data)
-
+    '''
     xs = []
     for key in ("features", "reduceddegree"):
         x = data[key]
         x = x.view(-1, 1) if x.dim() <= 1 else x
         xs.append(x)
         del data[key]
-
-    data.x = torch.cat(xs, dim=-1)
+    '''
+    data.x = data["reduceddegree"] #torch.cat(xs, dim=-1)
 
     return data
