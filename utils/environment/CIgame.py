@@ -64,7 +64,7 @@ class GraphState(pyspiel.State):
     self.global_feature = None
     self._rewards = np.zeros(_NUM_PLAYERS)
     self._returns = np.zeros(_NUM_PLAYERS)
-    self.lcc = [get_lcc(self.Graph)]
+    self.lcc = [len(get_lcc(self.Graph))]
     self.r = []
     self.alpha = 1 - self.Graph.subgraph(range(self.Graph.vcount()-1)).density()
     self.beta = [molloy_reed(self.Graph)]
@@ -146,7 +146,7 @@ class GraphState(pyspiel.State):
       #self.info_state = utils.from_networkx(self.Graph.to_networkx())
       self.info_state = from_igraph(self.Graph)
       self.global_feature = None
-      self.lcc = [get_lcc(self.Graph)]
+      self.lcc = [len(get_lcc(self.Graph))]
       self.r = []
       #self.alpha = (1-nx.density(self.Graph.subgraph(np.arange(len(self.Graph)-1)))) # For Supernode
       self.alpha = 1-self.Graph.density()

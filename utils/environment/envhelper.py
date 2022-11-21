@@ -43,15 +43,23 @@ def reset(graph):
 
 # Helper functions for game details.
 '''def get_lcc(g):
-    return len(max(g.connected_components(), key=len)) '''    
-def get_lcc(g):
-    G = g.to_networkx()
-    return len(max(nx.connected_components(G), key=len))
+    return max(g.connected_components(), key=len) '''    
+def get_lcc(G):
+    found = set()
+
+    comps = []
+    for v in G.vs.indices:
+        if v not in found:
+            connected = G.bfs(v)[0]
+            found.update(connected)
+            comps.append(connected)
+
+    return max(comps, key=len)
 
 def molloy_reed(g):
   degs = np.array(g.degree())
   #degs = all_degree
-  #nonmax_lcc = list(set(g.vs.indices).difference(set(max(g.connected_components(), key=len))))
+  #nonmax_lcc = list(set(g.vs.indices).difference(set(get_lcc(g))))
   #degs = np.delete(all_degree, np.array(nonmax_lcc, dtype=int))#for non max LCC
   #degs = np.delete(deg,-1)#for supernode
   k = degs.mean()
@@ -133,7 +141,7 @@ def network_dismantle(board, init_lcc):
     """Checks if a line exists, returns "x" or "o" if so, and None otherwise."""
     all_nodes = np.array(board.vs["active"])
     active_nodes = np.where(all_nodes == 1)[0]
-    largest_cc = get_lcc(board)
+    largest_cc = len(get_lcc(board))
     cond = True if len(active_nodes) <= 2 or board.ecount() == 1  or (largest_cc/init_lcc) <= 0.1 else False
     return cond, largest_cc
 

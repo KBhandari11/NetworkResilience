@@ -22,7 +22,7 @@ def EvaluateModel(env, trained_agents,GRAPH):
 # Given an environmnet with all action in  a list 
 def EvaluateACTION(action_list,GRAPH):
     """Evaluates the env for given action_list"""
-    lcc = [get_lcc(GRAPH)]
+    lcc = [len(get_lcc(GRAPH))]
     act = []
     for action in action_list:
         ebunch = GRAPH.incident(GRAPH.vs.find(name=str(action)))
