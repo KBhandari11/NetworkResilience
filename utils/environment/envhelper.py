@@ -5,6 +5,7 @@ import networkx as nx
 from scipy.stats import entropy
 from igraph import Graph
 from torch_geometric.data import Data
+from torch_geometric.utils import to_undirected
 
 def gen_graph(cur_n, g_type,seed=None):
     random.seed(seed)
@@ -97,14 +98,54 @@ def global_feature(g):
     global_properties = torch.from_numpy(global_properties.astype(np.float32))#.to(device)
     return global_properties
 
+def get_Ball(g,v,l,n):
+    if l == 1:
+        return [v]
+    else:
+        for i in g.neighbors(v):
+            if not(i in n):
+                a = get_Ball(g,i,l-1,n)
+                if a == None:
+                    n = list(set().union([i],n))
+                else:
+                    n = list(set().union(a,[i],n))
+            #print('n',n)
+        if v in n:
+            return list(set(n)-set([v]))
+        else:
+            return n
+         
+
+def get_ci(g, l):
+    ci = []
+    degs = np.array(g.degree())
+    #G_nx = g.to_networkx()
+    for i in g.vs.indices:
+        n = get_Ball(g,i,l,[i])
+        j = np.sum(degs[n] - 1)
+        ci.append((g.degree(i) - 1) * j)
+    ci = np.array(ci)
+    if np.std(ci) != 0:
+        ci = (ci - np.mean(ci)) / np.std(ci)
+    else:
+        ci = (ci - np.mean(ci))
+    return ci
+
+'''
 def get_ci(g, l):
     ci = []
     degs = np.array(g.degree())
     for i in g.vs.indices:
-        n = np.array([path[-1] for path in g.get_all_shortest_paths(i) if path and len(path) <= l])
+        n = [path[-1] for path in g.get_all_shortest_paths(i) if path and len(path) <= l]
+        print(n)
+        if i in n:
+            n = n.remove(i)
+        print(n)
+        n = np.array(n)
         j = np.sum(degs[n] - 1)
         ci.append((g.degree(i) - 1) * j)
     return ci
+'''
 
 def get_centrality_features(g):
     degree_centrality = np.array(g.degree()) / (g.vcount() - 1)
@@ -129,7 +170,7 @@ def features(g):
     #active_nodes =  np.where(np.array(list(g.nodes(data="active")))[:,1] == 0)[0]
     #x_normed[active_nodes,:]=np.zeros(np.shape(x_normed)[1])
     x = torch.from_numpy(x.astype(np.float32))#.to(device)
-    x_normed = (x - torch.mean(x)) / torch.std(x)
+    x_normed = x #(x - torch.mean(x)) / torch.std(x)
 
     return x_normed
 
@@ -151,12 +192,13 @@ def board_to_string(board):
 
 def from_igraph(graph):
     edges = [edge.tuple for edge in graph.es]
-
     edge_index = torch.tensor(edges, dtype=torch.long).t().contiguous()
-
+    if edge_index.shape[0] != 0:
+        edge_index = to_undirected(edge_index)
     data = {}
     #data["features"] = features(graph)
-    data["reduceddegree"] = reduceddegree(graph)
+    x = features(graph) #reduceddegree(graph)
+    #data["reduceddegree"] = (x - torch.mean(x)) / torch.std(x)
 
     data["edge_index"] = edge_index.view(2, -1)
     data = Data.from_dict(data)
@@ -168,6 +210,5 @@ def from_igraph(graph):
         xs.append(x)
         del data[key]
     '''
-    data.x = data["reduceddegree"] #torch.cat(xs, dim=-1)
-
+    data.x = x#data["reduceddegree"] #torch.cat(xs, dim=-1)
     return data

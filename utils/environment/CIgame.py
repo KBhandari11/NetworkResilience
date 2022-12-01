@@ -66,7 +66,7 @@ class GraphState(pyspiel.State):
     self._returns = np.zeros(_NUM_PLAYERS)
     self.lcc = [len(get_lcc(self.Graph))]
     self.r = []
-    self.alpha = 1 - self.Graph.subgraph(range(self.Graph.vcount()-1)).density()
+    self.alpha = 1 - self.Graph.density()
     self.beta = [molloy_reed(self.Graph)]
     self.empty_index = torch.Tensor().reshape((2, 0))
 

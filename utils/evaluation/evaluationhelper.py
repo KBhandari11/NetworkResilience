@@ -12,7 +12,8 @@ def EvaluateModel(env, trained_agents,GRAPH):
             agent.step(time_step, is_evaluation=True) for agent in cur_agents
         ]
         action_list = [agent_output.action for agent_output in agents_output]
-        action_lists.append(action_list[0])
+        action_lists.append(int(env.get_state.Graph.vs[action_list[0]]["name"])) # the action corresponds to node id in IGraph and name refers to the name of the node in the graph. 
+        #action_lists.append(action_list[0])
         time_step = env.step([action_list[0],action_list[0]])
         i+=1
         episode_rewards.append(env.get_state._rewards[0])

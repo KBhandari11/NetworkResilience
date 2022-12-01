@@ -13,7 +13,7 @@
 # limitations under the License.
 
 """DQN agent implemented in PyTorch."""
-
+import math
 import collections
 import numpy as np
 import torch
@@ -41,7 +41,7 @@ class DQN(rl_agent.AbstractAgent):
                state_representation_size,
                global_feature_size,
                num_actions,
-               hidden_layers_sizes=[[4,3],[5,3],[6,4,3]],
+               hidden_layers_sizes=[[1,1,1],[3,3]],
                output_layer_size =1,
                replay_buffer_capacity=10000,
                batch_size=128,
@@ -306,9 +306,13 @@ class DQN(rl_agent.AbstractAgent):
     nstep_gamma = (self._discount_factor**self.n_steps)
     for i in range(self._batch_size):
         target.append((rewards[i] + (1 - are_final_steps[i]) * nstep_gamma * max_next_q[i]))
+        #if math.isnan(target[-1]):
+        #    print(transitions[i].info_state,transitions[i].info_state.x,rewards[i],are_final_steps[i], max_next_q[i])
         prediction.append(self._q_values[i][actions[i].item()])
     target = torch.stack(target).to(self.device)
     prediction = torch.stack(prediction)
+    #print("target",target)
+    #print("prediction",prediction)
     loss = self.loss_class(prediction, target)
     self._optimizer.zero_grad()
     loss.backward()

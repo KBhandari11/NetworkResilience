@@ -1,7 +1,7 @@
 {
     "architecture": "GAT and DQN",
     "dataset": "Synthetic Dataset:barabasi_albert ",
-    "centrality_feature_name":"Deg,Eigen,CC,K-Core,PgRnk,CI ",
+    "centrality_feature_name":"Deg,Eigen,PgRnk,CI ",
     "global_feature_name":"Hetero,Dens,Res,Gini,Entro,Transi",
     "centrality_features": 1,
     "global_features": 0,
@@ -11,7 +11,7 @@
     "graph_batch_size":1000,
     "graph_suffle": 2e3,      
     "validation_test_size":2,
-    "hidden_layers":[[2,3],[3,2]] ,
+    "hidden_layers":[[1,1,1],[2,2]] ,
     "replay_buffer_capacity":1e5,
     "batch_size":32,
     "learning_rate":0.001,
@@ -20,9 +20,9 @@
     "discount_factor": 0.99,
     "min_buffer_size_to_learn": 1000,
     "epsilon_power":4.0,
-    "nstep":3,
+    "nstep":1,
     "epsilon_start":1.0,
-    "epsilon_end":0.1,
+    "epsilon_end":0.01,
     "epsilon_decay_duration": 2e7,
     "checkpoint_dir": "./model/CI_BA_Graph_WithoutFeature/model_BAGraph"
 }
