@@ -151,14 +151,20 @@ def get_centrality_features(g):
     degree_centrality = np.array(g.degree()) / (g.vcount() - 1)
     #precolation_centrality = list(nx.percolation_centrality(g,attribute='active').values())
     #closeness_centrality = list(nx.closeness_centrality(g).values())
-    eigen_centrality = np.array(g.eigenvector_centrality())
+    try:
+        eigen_centrality = np.array(g.eigenvector_centrality())
+    except:
+        #ARPACKOptions.tol =  int(10e-2)
+        #value = Graph.arpack_defaults.tol = int(10e-2)
+        eigen_centrality = np.array(g.eigenvector_centrality())
     #clustering_coeff = np.array(g.transitivity_local_undirected())
     #core_num = np.array(g.coreness())
     pagerank = np.array(g.personalized_pagerank())
-    ci = get_ci(g, 3)
+    ci = np.array(get_ci(g, 3))
     #active = np.array(g.nodes.data("active"))[:,1]
-    x = np.column_stack((degree_centrality,eigen_centrality,pagerank, ci ))
-    #x = np.column_stack((degree_centrality,eigen_centrality,pagerank))
+    #x = np.column_stack((degree_centrality,eigen_centrality,pagerank, ci ))
+    x = np.column_stack((degree_centrality,eigen_centrality,pagerank))
+    #x = ci.reshape(-1,1)
     return x
 
 def features(g): 
@@ -197,8 +203,8 @@ def from_igraph(graph):
         edge_index = to_undirected(edge_index)
     data = {}
     #data["features"] = features(graph)
-    x = features(graph) #reduceddegree(graph)
-    #data["reduceddegree"] = (x - torch.mean(x)) / torch.std(x)
+    x =  reduceddegree(graph) #features(graph)
+    #data["reduceddegree"] = x#(x - torch.mean(x)) / torch.std(x)
 
     data["edge_index"] = edge_index.view(2, -1)
     data = Data.from_dict(data)
@@ -210,5 +216,5 @@ def from_igraph(graph):
         xs.append(x)
         del data[key]
     '''
-    data.x = x#data["reduceddegree"] #torch.cat(xs, dim=-1)
+    data.x = x#torch.cat(xs, dim=-1)
     return data
