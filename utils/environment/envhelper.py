@@ -125,10 +125,8 @@ def get_ci(g, l):
         j = np.sum(degs[n] - 1)
         ci.append((g.degree(i) - 1) * j)
     ci = np.array(ci)
-    if np.std(ci) != 0:
-        ci = (ci - np.mean(ci)) / np.std(ci)
-    else:
-        ci = (ci - np.mean(ci))
+    if (max(ci) - min(ci)) != 0:
+        ci =  (ci - min(ci)) / (max(ci) - min(ci)) #(ci - np.mean(ci)) / np.std(ci)
     return ci
 
 '''
@@ -148,23 +146,24 @@ def get_ci(g, l):
 '''
 
 def get_centrality_features(g):
-    degree_centrality = np.array(g.degree()) / (g.vcount() - 1)
+    degree_centrality = np.array(g.degree()) / (g.vcount() - 1) + 1
     #precolation_centrality = list(nx.percolation_centrality(g,attribute='active').values())
     #closeness_centrality = list(nx.closeness_centrality(g).values())
     try:
-        eigen_centrality = np.array(g.eigenvector_centrality())
+        eigen_centrality = np.array(g.eigenvector_centrality()) + 1
     except:
         #ARPACKOptions.tol =  int(10e-2)
         #value = Graph.arpack_defaults.tol = int(10e-2)
-        eigen_centrality = np.array(g.eigenvector_centrality())
+        eigen_centrality = np.array(g.eigenvector_centrality()) + 1 
     #clustering_coeff = np.array(g.transitivity_local_undirected())
     #core_num = np.array(g.coreness())
-    pagerank = np.array(g.personalized_pagerank())
-    ci = np.array(get_ci(g, 3))
+    pagerank = np.array(g.personalized_pagerank()) + 1 
+    ci = np.array(get_ci(g, 3)) + 1 
     #active = np.array(g.nodes.data("active"))[:,1]
     #x = np.column_stack((degree_centrality,eigen_centrality,pagerank, ci ))
-    x = np.column_stack((degree_centrality,eigen_centrality,pagerank))
+    x = np.column_stack((degree_centrality,eigen_centrality,pagerank,ci))
     #x = ci.reshape(-1,1)
+    #x = pagerank.reshape(-1,1)
     return x
 
 def features(g): 
@@ -189,7 +188,7 @@ def network_dismantle(board, init_lcc):
     all_nodes = np.array(board.vs["active"])
     active_nodes = np.where(all_nodes == 1)[0]
     largest_cc = len(get_lcc(board))
-    cond = True if len(active_nodes) <= 2 or board.ecount() == 1  or (largest_cc/init_lcc) <= 0.1 else False
+    cond = True if len(active_nodes) <= 2 or board.ecount() == 1  or (largest_cc/init_lcc) <= 0.01 else False
     return cond, largest_cc
 
 def board_to_string(board):
@@ -203,7 +202,7 @@ def from_igraph(graph):
         edge_index = to_undirected(edge_index)
     data = {}
     #data["features"] = features(graph)
-    x =  reduceddegree(graph) #features(graph)
+    x =  reduceddegree(graph)  #features(graph) 
     #data["reduceddegree"] = x#(x - torch.mean(x)) / torch.std(x)
 
     data["edge_index"] = edge_index.view(2, -1)

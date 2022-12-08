@@ -291,6 +291,7 @@ class DQN(rl_agent.AbstractAgent):
         next_global_feature = t.next_global_feature
         target_q_values.append(torch.flatten(self._target_q_network(next_info_states.x,next_info_states.edge_index,next_global_feature)))
         are_final_steps.append(t.is_final_step)
+        
         max_next_q.append(self.max_next_q_value(target_q_values[-1].detach(),t.legal_actions_mask))
     actions = torch.LongTensor(actions)
     rewards = torch.Tensor(rewards)
@@ -298,9 +299,6 @@ class DQN(rl_agent.AbstractAgent):
     max_next_q = torch.Tensor(max_next_q)
     self._q_values = q_values
     self._target_q_values = target_q_values
-    #print('Qvalues', self._q_values)
-    #print("illegallogits",illegal_logits)
-    #print('targetvalues', self._target_q_values)
     target=[]
     prediction=[]
     nstep_gamma = (self._discount_factor**self.n_steps)
@@ -311,8 +309,6 @@ class DQN(rl_agent.AbstractAgent):
         prediction.append(self._q_values[i][actions[i].item()])
     target = torch.stack(target).to(self.device)
     prediction = torch.stack(prediction)
-    #print("target",target)
-    #print("prediction",prediction)
     loss = self.loss_class(prediction, target)
     self._optimizer.zero_grad()
     loss.backward()

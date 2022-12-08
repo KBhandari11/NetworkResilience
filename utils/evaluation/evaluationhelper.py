@@ -20,7 +20,11 @@ def EvaluateModel(env, trained_agents,GRAPH):
     lcc = env.get_state.lcc
     return episode_rewards, lcc, action_lists
 
-# Given an environmnet with all action in  a list 
+def eval_network_dismantle(graph, init_lcc):
+    largest_cc = len(get_lcc(graph))
+    cond = True if (largest_cc/init_lcc) <= 0.01 else False
+    return cond, largest_cc
+
 def EvaluateACTION(action_list,GRAPH):
     """Evaluates the env for given action_list"""
     lcc = [len(get_lcc(GRAPH))]
@@ -28,7 +32,7 @@ def EvaluateACTION(action_list,GRAPH):
     for action in action_list:
         ebunch = GRAPH.incident(GRAPH.vs.find(name=str(action)))
         GRAPH.delete_edges(ebunch)
-        cond, l = network_dismantle(GRAPH, lcc[0])
+        cond, l = eval_network_dismantle(GRAPH, lcc[0])
         lcc.append(l)
         act.append(action)
         if cond:
